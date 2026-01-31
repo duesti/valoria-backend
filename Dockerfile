@@ -3,7 +3,7 @@ FROM oven/bun:latest as release
 WORKDIR /app
 
 # Устанавливаем зависимости
-COPY package.json bun.lockb ./
+COPY package.json ./
 RUN bun install --frozen-lockfile
 
 # Копируем схему Prisma и генерируем клиент
