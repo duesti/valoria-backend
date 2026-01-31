@@ -17,5 +17,6 @@ app.route("/api/v1", router);
 
 Bun.serve({
 	fetch: app.fetch,
+	hostname: "0.0.0.0",
 	port: config?.PORT,
 });
