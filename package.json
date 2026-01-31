@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "bun src/index.ts",
-    "seed": "bun prisma/seed.ts"
+    "seed": "bun prisma/seed.ts",
+    "start": "bun run src/index.ts",
+    "build": "bun build ./src/index.ts --outdir ./dist"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",
