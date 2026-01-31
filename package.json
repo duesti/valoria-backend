@@ -1,0 +1,26 @@
+{
+  "name": "valoria-backend",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun src/index.ts",
+    "seed": "bun prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@types/bun": "latest",
+    "prisma": "^7.3.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@hono/oauth-providers": "^0.8.5",
+    "@hono/zod-validator": "^0.7.6",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "hono": "^4.11.7",
+    "zod": "^4.3.6"
+  }
+}

@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  name String
+  discord_id String @unique
+  description String?
+  online Boolean @default(false)
+
+  role_id Int @default(1)
+  role Role @relation(fields: [role_id], references: [id])
+
+  Applications Application[]
+
+  tokens Token[]
+}
+
+model Role {
+  id Int @id @default(autoincrement())
+  name String @unique
+  admin Boolean
+  users User[]
+}
+
+model Application {
+  id Int @id @default(autoincrement())
+  author_id Int
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  content Json
+
+  status String @default("На рассмотрении")
+
+  user User @relation(fields: [author_id], references: [id])
+}
+
+model Token {
+  id Int @id @default(autoincrement())
+
+  token String
+
+  expires_at DateTime
+  created_at DateTime @default(now())
+  revoked Boolean @default(false)
+
+  owner_id Int
+  owner User @relation(fields: [owner_id], references: [id])
+}
