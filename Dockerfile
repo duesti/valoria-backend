@@ -1,5 +1,5 @@
 # Используем официальный образ Bun
-FROM oven/bun:latest as base
+FROM oven/bun:latest as release
 WORKDIR /app
 
 # Устанавливаем зависимости
