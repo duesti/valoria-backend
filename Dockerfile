@@ -4,10 +4,10 @@ WORKDIR /app
 
 # ЭТАП 2: Установка зависимостей в отдельном слое
 FROM base AS install
-# Копируем файлы манифестов
-COPY package.json bun.lockb ./
-# Устанавливаем только production-зависимости с замороженным лок-файлом для стабильности
-RUN bun install --production --frozen-lockfile
+# Копируем только package.json
+COPY package.json ./
+# Устанавливаем только production-зависимости (без использования лок-файла)
+RUN bun install --production
 
 # ЭТАП 3: Сборка и генерация клиента Prisma
 FROM base AS build
@@ -15,8 +15,7 @@ COPY --from=install /app/node_modules ./node_modules
 COPY . .
 # Генерируем клиент Prisma внутри контейнера
 RUN bunx prisma generate
-# Выполняем команду сборки, которая у вас прописана в package.json:
-# "build": "bun build ./src/index.ts --outdir ./dist"
+# Выполняем команду сборки из package.json
 RUN bun run build
 
 # ЭТАП 4: Финальный продакшн-образ (максимально легкий)
