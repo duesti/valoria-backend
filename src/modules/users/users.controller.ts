@@ -5,6 +5,7 @@ import { isAuthorized } from "../../middlewares/auth.middleware";
 import { isAdmin } from "../../middlewares/roles.middleware";
 import { UpdateUserRoleSchema, UpdateUserSchema } from "./users.schema";
 import { usersService } from "./users.service";
+import { ForbiddenError, NotFoundError } from "../../core/errors";
 
 const usersController = new Hono<AppEnv>();
 
@@ -20,7 +21,7 @@ usersController.get("/:userId", async (ctx) => {
 	const user = await usersService.getUser(userId);
 
 	if (!user) {
-		return ctx.json({ error: "User not found" }, 404);
+		throw new NotFoundError("Пользователь не найден");
 	}
 
 	return ctx.json(user);
@@ -39,15 +40,15 @@ usersController.patch(
 		const isUserAdmin = ctx.get("isAdmin");
 
 		if (currentUser.id !== userId && !isUserAdmin) {
-			return ctx.json({ error: "Forbidden" }, 403);
+			throw new ForbiddenError();
 		}
 
 		const payload = ctx.req.valid("json");
 
-		const user = usersService.getUser(userId);
+		const user = await usersService.getUser(userId);
 
 		if (!user) {
-			return ctx.json("User not found", 404);
+			throw new NotFoundError("Пользователь не найден");
 		}
 
 		const updatedUser = await usersService.updateUser(userId, payload);
@@ -64,13 +65,13 @@ usersController.delete("/:userId", isAuthorized, isAdmin, async (ctx) => {
 	const isUserAdmin = ctx.get("isAdmin");
 
 	if (currentUser.id !== userId && !isUserAdmin) {
-		return ctx.json({ error: "Forbidden" }, 403);
+		throw new ForbiddenError();
 	}
 
-	const user = usersService.getUser(userId);
+	const user = await usersService.getUser(userId);
 
 	if (!user) {
-		return ctx.json("User not found", 404);
+		throw new NotFoundError("Пользователь не найден");
 	}
 
 	const deletedUser = await usersService.deleteUser(userId);
@@ -89,13 +90,13 @@ usersController.post(
 		const isUserAdmin = ctx.get("isAdmin");
 
 		if (!isUserAdmin) {
-			return ctx.json({ error: "Forbidden" }, 403);
+			throw new ForbiddenError();
 		}
 
 		const user = usersService.getUser(userId);
 
 		if (!user) {
-			return ctx.json("User not found", 404);
+			throw new NotFoundError("Пользователь не найден");
 		}
 
 		const payload = ctx.req.valid("json");

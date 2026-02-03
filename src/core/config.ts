@@ -27,7 +27,7 @@ const envSchema = z.object({
 const validationResult = envSchema.safeParse(Bun.env);
 
 if (!validationResult.success) {
-	console.error(`Ошибка валидации конфига: ${validationResult.error.issues}`);
+	console.error("Ошибка валидации конфига");
 }
 
 export const config = validationResult.data;

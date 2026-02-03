@@ -10,6 +10,7 @@ import {
 	UpdateApplicationSchema,
 } from "./applications.schema";
 import { applicationsService } from "./applications.service";
+import { ForbiddenError, NotFoundError } from "../../core/errors";
 
 const applicationsController = new Hono<AppEnv>();
 
@@ -25,7 +26,7 @@ applicationsController.get("/:applicationId", async (ctx) => {
 	const application = await applicationsService.getApplication(applicationId);
 
 	if (!application) {
-		return ctx.json({ error: "Application not found" }, 404);
+		throw new NotFoundError("Заявка не найдена");
 	}
 
 	return ctx.json(application);
@@ -65,14 +66,14 @@ applicationsController.patch(
 		const application = await applicationsService.getApplication(applicationId);
 
 		if (!application) {
-			return ctx.json({ error: "Application not found" }, 404);
+			throw new NotFoundError("Заявка не найдена");
 		}
 
 		const currentUser = ctx.get("user");
 		const isUserAdmin = ctx.get("isAdmin");
 
 		if (currentUser.id !== application.author_id && !isUserAdmin) {
-			return ctx.json({ error: "Forbidden" }, 403);
+			throw new ForbiddenError();
 		}
 
 		const payload = ctx.req.valid("json");
@@ -101,14 +102,14 @@ applicationsController.delete(
 		const application = await applicationsService.getApplication(applicationId);
 
 		if (!application) {
-			return ctx.json({ error: "Application not found" }, 404);
+			throw new NotFoundError("Заявка не найдена");
 		}
 
 		const currentUser = ctx.get("user");
 		const isUserAdmin = ctx.get("isAdmin");
 
 		if (currentUser.id !== application.author_id && !isUserAdmin) {
-			return ctx.json({ error: "Forbidden" }, 403);
+			throw new ForbiddenError();
 		}
 
 		const deletedApplication =

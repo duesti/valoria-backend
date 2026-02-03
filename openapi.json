@@ -1,0 +1,730 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Valoria Backend API",
+		"description": "API документация для Valoria Backend",
+		"version": "1.0.0",
+		"contact": {
+			"name": "Valoria Support"
+		}
+	},
+	"servers": [
+		{
+			"url": "http://localhost:3030/api/v1",
+			"description": "Development server"
+		},
+		{
+			"url": "https://api.valoria.com/api/v1",
+			"description": "Production server"
+		}
+	],
+	"tags": [
+		{
+			"name": "Auth",
+			"description": "Авторизация и аутентификация"
+		},
+		{
+			"name": "Users",
+			"description": "Управление пользователями"
+		},
+		{
+			"name": "Roles",
+			"description": "Управление ролями"
+		},
+		{
+			"name": "Applications",
+			"description": "Управление заявками"
+		}
+	],
+	"paths": {
+		"/auth/discord": {
+			"get": {
+				"tags": ["Auth"],
+				"summary": "Discord OAuth авторизация",
+				"description": "Перенаправляет на Discord для OAuth авторизации",
+				"responses": {
+					"302": {
+						"description": "Перенаправление на Discord"
+					}
+				}
+			}
+		},
+		"/auth/refresh": {
+			"post": {
+				"tags": ["Auth"],
+				"summary": "Обновить access токен",
+				"description": "Использует refresh токен из cookies для получения нового access токена",
+				"responses": {
+					"200": {
+						"description": "Успешное обновление",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"accessToken": {
+											"type": "string",
+											"description": "Новый access токен"
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Нет refresh токена или он невалиден"
+					}
+				}
+			}
+		},
+		"/auth/logout": {
+			"post": {
+				"tags": ["Auth"],
+				"summary": "Выход из системы",
+				"description": "Отзывает refresh токен",
+				"responses": {
+					"200": {
+						"description": "Успешный выход"
+					}
+				}
+			}
+		},
+		"/users": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "Получить всех пользователей",
+				"responses": {
+					"200": {
+						"description": "Список пользователей",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/User"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/users/{userId}": {
+			"get": {
+				"tags": ["Users"],
+				"summary": "Получить пользователя по ID",
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Пользователь найден",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Пользователь не найден",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								}
+							}
+						}
+					}
+				}
+			},
+			"patch": {
+				"tags": ["Users"],
+				"summary": "Обновить пользователя",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateUserInput"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Пользователь обновлен",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Не авторизован"
+					},
+					"403": {
+						"description": "Недостаточно прав"
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Users"],
+				"summary": "Удалить пользователя",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Пользователь удален"
+					},
+					"401": {
+						"description": "Не авторизован"
+					},
+					"403": {
+						"description": "Недостаточно прав"
+					}
+				}
+			}
+		},
+		"/users/roles/{userId}": {
+			"post": {
+				"tags": ["Users"],
+				"summary": "Установить роль пользователю",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "userId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"role_id": {
+										"type": "integer"
+									}
+								},
+								"required": ["role_id"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Роль установлена"
+					},
+					"403": {
+						"description": "Требуются права админа"
+					}
+				}
+			}
+		},
+		"/roles": {
+			"get": {
+				"tags": ["Roles"],
+				"summary": "Получить все роли",
+				"responses": {
+					"200": {
+						"description": "Список ролей",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Role"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["Roles"],
+				"summary": "Создать роль",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateRoleInput"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Роль создана",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Role"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Требуются права админа"
+					}
+				}
+			}
+		},
+		"/roles/{roleId}": {
+			"get": {
+				"tags": ["Roles"],
+				"summary": "Получить роль по ID",
+				"parameters": [
+					{
+						"name": "roleId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Роль найдена",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Role"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Роль не найдена"
+					}
+				}
+			},
+			"patch": {
+				"tags": ["Roles"],
+				"summary": "Обновить роль",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "roleId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateRoleInput"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Роль обновлена"
+					},
+					"403": {
+						"description": "Требуются права админа"
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Roles"],
+				"summary": "Удалить роль",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "roleId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Роль удалена"
+					},
+					"403": {
+						"description": "Требуются права админа"
+					}
+				}
+			}
+		},
+		"/applications": {
+			"get": {
+				"tags": ["Applications"],
+				"summary": "Получить все заявки",
+				"responses": {
+					"200": {
+						"description": "Список заявок",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/Application"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"tags": ["Applications"],
+				"summary": "Создать заявку",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateApplicationInput"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Заявка создана",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Application"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Не авторизован"
+					}
+				}
+			}
+		},
+		"/applications/{applicationId}": {
+			"get": {
+				"tags": ["Applications"],
+				"summary": "Получить заявку по ID",
+				"parameters": [
+					{
+						"name": "applicationId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Заявка найдена",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Application"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Заявка не найдена"
+					}
+				}
+			},
+			"patch": {
+				"tags": ["Applications"],
+				"summary": "Обновить заявку",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "applicationId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateApplicationInput"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Заявка обновлена"
+					},
+					"403": {
+						"description": "Недостаточно прав"
+					}
+				}
+			},
+			"delete": {
+				"tags": ["Applications"],
+				"summary": "Удалить заявку",
+				"security": [
+					{
+						"BearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "applicationId",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "integer"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Заявка удалена"
+					},
+					"403": {
+						"description": "Недостаточно прав"
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"securitySchemes": {
+			"BearerAuth": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT"
+			}
+		},
+		"schemas": {
+			"User": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"name": {
+						"type": "string"
+					},
+					"discord_id": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string",
+						"nullable": true
+					},
+					"online": {
+						"type": "boolean"
+					},
+					"role_id": {
+						"type": "integer"
+					}
+				},
+				"required": ["id", "name", "discord_id", "online", "role_id"]
+			},
+			"UpdateUserInput": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"description": {
+						"type": "string"
+					},
+					"online": {
+						"type": "boolean"
+					}
+				}
+			},
+			"Role": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"name": {
+						"type": "string"
+					},
+					"admin": {
+						"type": "boolean"
+					}
+				},
+				"required": ["id", "name", "admin"]
+			},
+			"CreateRoleInput": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"admin": {
+						"type": "boolean"
+					}
+				},
+				"required": ["name", "admin"]
+			},
+			"UpdateRoleInput": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"admin": {
+						"type": "boolean"
+					}
+				}
+			},
+			"Application": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "integer"
+					},
+					"author_id": {
+						"type": "integer"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"updated_at": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"content": {
+						"type": "object"
+					},
+					"status": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"id",
+					"author_id",
+					"created_at",
+					"updated_at",
+					"content",
+					"status"
+				]
+			},
+			"CreateApplicationInput": {
+				"type": "object",
+				"properties": {
+					"content": {
+						"type": "object"
+					}
+				},
+				"required": ["content"]
+			},
+			"UpdateApplicationInput": {
+				"type": "object",
+				"properties": {
+					"content": {
+						"type": "object"
+					},
+					"status": {
+						"type": "string"
+					}
+				}
+			},
+			"Error": {
+				"type": "object",
+				"properties": {
+					"status_code": {
+						"type": "integer"
+					},
+					"message": {
+						"type": "string"
+					},
+					"code": {
+						"type": "string"
+					}
+				},
+				"required": ["status_code", "message", "code"]
+			}
+		}
+	}
+}

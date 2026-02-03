@@ -4,6 +4,7 @@ import { isAuthorized } from "../../middlewares/auth.middleware";
 import { isAdmin } from "../../middlewares/roles.middleware";
 import { CreateRoleSchema, UpdateRoleSchema } from "./roles.schema";
 import { rolesService } from "./roles.service";
+import { ForbiddenError, NotFoundError } from "../../core/errors";
 
 const rolesController = new Hono();
 
@@ -19,7 +20,7 @@ rolesController.get("/:roleId", async (ctx) => {
 	const role = await rolesService.getRole(roleId);
 
 	if (!role) {
-		return ctx.json({ error: "Role not found" }, 404);
+		throw new NotFoundError("Роль не найдена");
 	}
 
 	return ctx.json(role);
@@ -34,7 +35,7 @@ rolesController.post(
 		const isUserAdmin = ctx.get("isAdmin");
 
 		if (!isUserAdmin) {
-			return ctx.json({ error: "Forbidden" }, 403);
+			throw new ForbiddenError();
 		}
 
 		const payload = ctx.req.valid("json");
@@ -59,13 +60,13 @@ rolesController.patch(
 		const role = await rolesService.getRole(roleId);
 
 		if (!role) {
-			return ctx.json({ error: "Role not found" }, 404);
+			throw new NotFoundError("Роль не найдена");
 		}
 
 		const isUserAdmin = ctx.get("isAdmin");
 
 		if (!isUserAdmin) {
-			return ctx.json({ error: "Forbidden" }, 403);
+			throw new ForbiddenError();
 		}
 
 		const payload = ctx.req.valid("json");
@@ -87,13 +88,13 @@ rolesController.delete(
 		const role = await rolesService.getRole(roleId);
 
 		if (!role) {
-			return ctx.json({ error: "Role not found" }, 404);
+			throw new NotFoundError("Роль не найдена");
 		}
 
 		const isUserAdmin = ctx.get("isAdmin");
 
 		if (!isUserAdmin) {
-			return ctx.json({ error: "Forbidden" }, 403);
+			throw new ForbiddenError();
 		}
 
 		const deleteRole = await rolesService.deleteRole(roleId);
