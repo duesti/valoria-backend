@@ -7,10 +7,13 @@ WORKDIR /app
 COPY package.json ./
 COPY prisma ./prisma
 COPY src ./src
-COPY tsconfig.json biome.json ./
+COPY tsconfig.json biome.json openapi.json ./
 
 # Install all dependencies (needed for build)
 RUN bun install
+
+# Generate Prisma client
+RUN bun exec prisma generate
 
 # Build the application
 RUN bun run build
