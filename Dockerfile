@@ -1,5 +1,5 @@
 # Build stage
-FROM oven/bun:1 as builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY tsconfig.json biome.json openapi.json ./
 RUN bun install
 
 # Generate Prisma client
-RUN bun exec prisma generate
+RUN bunx prisma generate
 
 # Build the application
 RUN bun run build
