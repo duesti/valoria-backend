@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5433:5432"
+    networks:
+      - pub-net
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  backend:
+    build: .
+    ports:
+      - "3000:3000"
+    networks:
+      - pub-net
+    depends_on:
+      - postgres
+
+networks:
+  pub-net:
+    external: true
