@@ -17,7 +17,8 @@ export const config = {
 	},
 	ouath2: {
 		clientId: validation.data?.CLIENT_ID,
-		clientSecret: validation.data?.CLIENT_SECRET
+		clientSecret: validation.data?.CLIENT_SECRET,
+		redirectUri: validation.data?.REDIRECT_URI,
 	},
 	jwt: {
 		accessSecret: validation.data?.ACCESS_SECRET,

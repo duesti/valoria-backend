@@ -22,6 +22,7 @@ const envSchema = z.object({
 		message: "Секрет клиента дискорд oauth указан не верно",
 	}),
 	FRONTEND_URL: z.string().url(),
+	REDIRECT_URI: z.string().url(),
 });
 
 export { envSchema };
