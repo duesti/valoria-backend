@@ -1,8 +1,7 @@
 services:
   postgres:
     image: postgres:latest
-    ports:
-      - "5433:5432"
+    hostname: postgres
     networks:
       - pub-net
     environment:
@@ -11,8 +10,6 @@ services:
 
   backend:
     build: .
-    ports:
-      - "3000:3000"
     networks:
       - pub-net
     depends_on:

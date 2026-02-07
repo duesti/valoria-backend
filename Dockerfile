@@ -21,9 +21,9 @@ FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
-run bun x prisma migrate deploy
-run bun x prisma generate
-run bun run seed
+# run bun x prisma migrate deploy
+# run bun x prisma generate
+# run bun run seed
 
 # [optional] tests & build
 ENV NODE_ENV=prod
