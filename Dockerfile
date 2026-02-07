@@ -21,9 +21,9 @@ FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
-# run bun x prisma migrate deploy
-# run bun x prisma generate
-# run bun run seed
+RUN bun x prisma migrate deploy
+RUN bun x prisma generate
+RUN bun run seed
 
 # [optional] tests & build
 ENV NODE_ENV=prod
@@ -32,7 +32,7 @@ RUN bun run build
 # copy production dependencies and source code into final image
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/index.ts .
+COPY --from=prerelease /usr/src/app/src/index.ts .
 COPY --from=prerelease /usr/src/app/package.json .
 
 # run the app
