@@ -32,10 +32,11 @@ RUN bun run build
 # copy production dependencies and source code into final image
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/src/index.ts .
-COPY --from=prerelease /usr/src/app/package.json .
+# ИСПРАВЛЕНИЕ: Копируем весь рабочий каталог, включая src/ и все внутренние папки
+COPY --from=prerelease /usr/src/app .
 
 # run the app
 USER bun
 EXPOSE 3030/tcp
+# ENTRYPOINT остается прежним, так как src/index.ts теперь в правильном месте относительно WORKDIR /usr/src/app
 ENTRYPOINT [ "bun", "run", "src/index.ts" ]
