@@ -1,7 +1,8 @@
+import { swaggerUI } from "@hono/swagger-ui";
 import { Hono } from "hono";
-import { config } from "./core/config";
-import { docsRouter } from "./core/docs";
-import { handleErrors } from "./middlewares/errors.middleware";
+import { describeRoute, openAPIRouteHandler } from "hono-openapi";
+import { config } from "@/src/core/config/config";
+import { handleErrors } from "@/src/middlewares/errors.middleware";
 import { router } from "./routes";
 
 export type AppEnv = {
@@ -15,13 +16,45 @@ export type AppEnv = {
 };
 
 const app = new Hono();
+
 app.onError(handleErrors);
+app.get(
+	"/health",
+	describeRoute({
+		description: "Проверка здоровья сервера",
+	}),
+	async (ctx) => {
+		return ctx.json({
+			status: "ok",
+		});
+	},
+);
 
 app.route("/api/v1", router);
-app.route("/", docsRouter);
+
+app.get(
+	"/openapi",
+	openAPIRouteHandler(app, {
+		documentation: {
+			info: {
+				title: "Valoria backend",
+				version: "1.0.0",
+				description: "Бекенд для взаимодействия с сайтом",
+			},
+			servers: [
+				{
+					url: "http://localhost:3030",
+					description: "Локальный сервер",
+				},
+			],
+		},
+	}),
+);
+
+app.get("/docs", swaggerUI({ url: "/openapi" }));
 
 Bun.serve({
 	fetch: app.fetch,
 	hostname: "0.0.0.0",
-	port: config?.PORT,
+	port: config.app.port,
 });

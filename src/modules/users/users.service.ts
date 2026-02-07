@@ -1,5 +1,7 @@
-import { prisma } from "../../core/db";
-import type { CreateUserInput, UpdateUserInput } from "./users.schema";
+import { prisma } from "@/src/infra/prisma";
+
+import type { CreateUserDTO, UpdateUserDTO } from "./users.dto";
+import { createUserSchema, updateUserSchema } from "./users.dto";
 
 export class UsersService {
 	async getUser(userId: number) {
@@ -10,21 +12,25 @@ export class UsersService {
 		return user;
 	}
 
-	async createUser(data: CreateUserInput) {
+	async createUser(data: CreateUserDTO) {
+		const validData = createUserSchema.parse(data)
+
 		const user = await prisma.user.create({
 			data: {
-				...data,
+				...validData,
 			},
 		});
 
 		return user;
 	}
 
-	async updateUser(userId: number, data: UpdateUserInput) {
+	async updateUser(userId: number, data: UpdateUserDTO) {
+		const validData = updateUserSchema.parse(data)
+
 		const user = await prisma.user.update({
 			where: { id: userId },
 			data: {
-				...data,
+				...validData,
 			},
 		});
 

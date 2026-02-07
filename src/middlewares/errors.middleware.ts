@@ -2,8 +2,8 @@ import type { Context } from "hono";
 import type { HTTPResponseError } from "hono/types";
 import type { StatusCode } from "hono/utils/http-status";
 
-import { AppError, InternalServerError } from "../core/errors";
-import { logger } from "../core/logger";
+import { AppError, InternalServerError } from "@/src/core/errors";
+import { logger } from "@/src/core/utils/logger";
 
 const handleErrors = async (err: Error | HTTPResponseError, ctx: Context) => {
 	let currentError: AppError;

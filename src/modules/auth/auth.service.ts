@@ -1,11 +1,11 @@
 import { sign, verify } from "hono/jwt";
-import { config } from "../../core/config";
-import { prisma } from "../../core/db";
-import { AuthError, InternalServerError } from "../../core/errors";
+import { config } from "@/src/core/config/config";
+import { AuthError, InternalServerError } from "@/src/core/errors";
+import { prisma } from "@/src/infra/prisma";
 import { usersService } from "../users/users.service";
 
-const ACCESS_SECRET = config?.ACCESS_SECRET as string;
-const REFRESH_SECRET = config?.REFRESH_SECRET as string;
+const ACCESS_SECRET = config.jwt.accessSecret as string;
+const REFRESH_SECRET = config.jwt.refreshSecret as string;
 
 const ACCESS_LIFETIME = 60 * 5;
 const REFRESH_LIFETIME = 7 * 24 * 60 * 60;

@@ -1,52 +1,62 @@
 import { zValidator } from "@hono/zod-validator";
-import type { InputJsonValue } from "@prisma/client/runtime/client";
 import { Hono } from "hono";
-import type { ApplicationCreateInput } from "../../../generated/prisma/models";
+import { describeRoute } from "hono-openapi";
+import { ForbiddenError, NotFoundError } from "@/src/core/errors";
+import { isAuthorized } from "@/src/middlewares/auth.middleware";
+import { isAdmin } from "@/src/middlewares/roles.middleware";
 import type { AppEnv } from "../..";
-import { isAuthorized } from "../../middlewares/auth.middleware";
-import { isAdmin } from "../../middlewares/roles.middleware";
 import {
-	CreateApplicationSchema,
-	UpdateApplicationSchema,
-} from "./applications.schema";
+	createApplicationSchema,
+	updateApplicationSchema,
+} from "./applications.dto";
 import { applicationsService } from "./applications.service";
-import { ForbiddenError, NotFoundError } from "../../core/errors";
 
 const applicationsController = new Hono<AppEnv>();
 
-applicationsController.get("/", async (ctx) => {
-	const applications = await applicationsService.getAllApplications();
+applicationsController.get(
+	"/",
+	describeRoute({
+		description: "Получить список всех заявок",
+	}),
+	async (ctx) => {
+		const applications = await applicationsService.getAllApplications();
 
-	return ctx.json(applications);
-});
+		return ctx.json(applications);
+	},
+);
 
-applicationsController.get("/:applicationId", async (ctx) => {
-	const applicationId = Number(ctx.req.param("applicationId"));
+applicationsController.get(
+	"/:applicationId",
+	describeRoute({
+		description: "Получить заявку по айди",
+	}),
+	async (ctx) => {
+		const applicationId = Number(ctx.req.param("applicationId"));
 
-	const application = await applicationsService.getApplication(applicationId);
+		const application = await applicationsService.getApplication(applicationId);
 
-	if (!application) {
-		throw new NotFoundError("Заявка не найдена");
-	}
+		if (!application) {
+			throw new NotFoundError("Заявка не найдена");
+		}
 
-	return ctx.json(application);
-});
+		return ctx.json(application);
+	},
+);
 
 applicationsController.post(
 	"/",
 	isAuthorized,
-	zValidator("json", CreateApplicationSchema),
+	describeRoute({
+		description: "Создать новую заявку",
+	}),
+	zValidator("json", createApplicationSchema),
 	async (ctx) => {
 		const currentUser = ctx.get("user");
 		const validatedPayload = ctx.req.valid("json");
 
-		const payload: ApplicationCreateInput = {
-			content: validatedPayload.content as InputJsonValue,
-			user: {
-				connect: {
-					id: currentUser.id,
-				},
-			},
+		const payload = {
+			content: validatedPayload.content,
+			author_id: currentUser.id,
 		};
 
 		const application = await applicationsService.createApplication(payload);
@@ -59,7 +69,10 @@ applicationsController.patch(
 	"/:applicationId",
 	isAuthorized,
 	isAdmin,
-	zValidator("json", UpdateApplicationSchema),
+	describeRoute({
+		description: "Обновить заявку",
+	}),
+	zValidator("json", updateApplicationSchema),
 	async (ctx) => {
 		const applicationId = Number(ctx.req.param("applicationId"));
 
@@ -82,8 +95,7 @@ applicationsController.patch(
 			applicationId,
 			{
 				...payload,
-				// biome-ignore lint/suspicious/noExplicitAny: <don't needed>
-				content: payload.content as any,
+				content: payload.content,
 			},
 			isUserAdmin,
 		);
@@ -96,6 +108,9 @@ applicationsController.delete(
 	"/:applicationId",
 	isAuthorized,
 	isAdmin,
+	describeRoute({
+		description: "Удалить заявку",
+	}),
 	async (ctx) => {
 		const applicationId = Number(ctx.req.param("applicationId"));
 

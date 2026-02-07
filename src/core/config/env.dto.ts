@@ -16,7 +16,7 @@ const envSchema = z.object({
 	}),
 
 	CLIENT_ID: z.string().min(1, {
-		message: "Ид клиента дискорд oauth указан не верно",
+		message: "Айди клиента дискорд oauth указан не верно",
 	}),
 	CLIENT_SECRET: z.string().min(1, {
 		message: "Секрет клиента дискорд oauth указан не верно",
@@ -24,10 +24,4 @@ const envSchema = z.object({
 	FRONTEND_URL: z.string().url(),
 });
 
-const validationResult = envSchema.safeParse(Bun.env);
-
-if (!validationResult.success) {
-	console.error("Ошибка валидации конфига");
-}
-
-export const config = validationResult.data;
+export { envSchema };

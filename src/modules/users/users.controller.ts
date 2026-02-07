@@ -1,37 +1,53 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { ForbiddenError, NotFoundError } from "@/src/core/errors";
+import { isAuthorized } from "@/src/middlewares/auth.middleware";
+import { isAdmin } from "@/src/middlewares/roles.middleware";
 import type { AppEnv } from "../..";
-import { isAuthorized } from "../../middlewares/auth.middleware";
-import { isAdmin } from "../../middlewares/roles.middleware";
-import { UpdateUserRoleSchema, UpdateUserSchema } from "./users.schema";
+import { updateUserRoleSchema, updateUserSchema } from "./users.dto";
 import { usersService } from "./users.service";
-import { ForbiddenError, NotFoundError } from "../../core/errors";
 
 const usersController = new Hono<AppEnv>();
 
-usersController.get("/", async (ctx) => {
-	const users = await usersService.getAllUsers();
+usersController.get(
+	"/",
+	describeRoute({
+		description: "Получить список всех пользователей",
+	}),
+	async (ctx) => {
+		const users = await usersService.getAllUsers();
 
-	return ctx.json(users);
-});
+		return ctx.json(users);
+	},
+);
 
-usersController.get("/:userId", async (ctx) => {
-	const userId = Number(ctx.req.param("userId"));
+usersController.get(
+	"/:userId",
+	describeRoute({
+		description: "Получить пользователя по айди",
+	}),
+	async (ctx) => {
+		const userId = Number(ctx.req.param("userId"));
 
-	const user = await usersService.getUser(userId);
+		const user = await usersService.getUser(userId);
 
-	if (!user) {
-		throw new NotFoundError("Пользователь не найден");
-	}
+		if (!user) {
+			throw new NotFoundError("Пользователь не найден");
+		}
 
-	return ctx.json(user);
-});
+		return ctx.json(user);
+	},
+);
 
 usersController.patch(
 	"/:userId",
 	isAuthorized,
 	isAdmin,
-	zValidator("json", UpdateUserSchema),
+	describeRoute({
+		description: "Обновить пользователя",
+	}),
+	zValidator("json", updateUserSchema),
 	async (ctx) => {
 		const userId = Number(ctx.req.param("userId"));
 
@@ -57,33 +73,44 @@ usersController.patch(
 	},
 );
 
-usersController.delete("/:userId", isAuthorized, isAdmin, async (ctx) => {
-	const userId = Number(ctx.req.param("userId"));
+usersController.delete(
+	"/:userId",
+	isAuthorized,
+	isAdmin,
+	describeRoute({
+		description: "Удалить пользователя",
+	}),
+	async (ctx) => {
+		const userId = Number(ctx.req.param("userId"));
 
-	const currentUser = ctx.get("user");
+		const currentUser = ctx.get("user");
 
-	const isUserAdmin = ctx.get("isAdmin");
+		const isUserAdmin = ctx.get("isAdmin");
 
-	if (currentUser.id !== userId && !isUserAdmin) {
-		throw new ForbiddenError();
-	}
+		if (currentUser.id !== userId && !isUserAdmin) {
+			throw new ForbiddenError();
+		}
 
-	const user = await usersService.getUser(userId);
+		const user = await usersService.getUser(userId);
 
-	if (!user) {
-		throw new NotFoundError("Пользователь не найден");
-	}
+		if (!user) {
+			throw new NotFoundError("Пользователь не найден");
+		}
 
-	const deletedUser = await usersService.deleteUser(userId);
+		const deletedUser = await usersService.deleteUser(userId);
 
-	return ctx.json(deletedUser);
-});
+		return ctx.json(deletedUser);
+	},
+);
 
-usersController.post(
+usersController.patch(
 	"/roles/:userId",
 	isAuthorized,
 	isAdmin,
-	zValidator("json", UpdateUserRoleSchema),
+	describeRoute({
+		description: "Обновить роль пользователя",
+	}),
+	zValidator("json", updateUserRoleSchema),
 	async (ctx) => {
 		const userId = Number(ctx.req.param("userId"));
 

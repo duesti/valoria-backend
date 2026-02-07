@@ -1,36 +1,52 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { isAuthorized } from "../../middlewares/auth.middleware";
-import { isAdmin } from "../../middlewares/roles.middleware";
-import { CreateRoleSchema, UpdateRoleSchema } from "./roles.schema";
+import { describeRoute } from "hono-openapi";
+import { ForbiddenError, NotFoundError } from "@/src/core/errors";
+import { isAuthorized } from "@/src/middlewares/auth.middleware";
+import { isAdmin } from "@/src/middlewares/roles.middleware";
+import { createRoleSchema, updateRoleSchema } from "./roles.dto";
 import { rolesService } from "./roles.service";
-import { ForbiddenError, NotFoundError } from "../../core/errors";
 
 const rolesController = new Hono();
 
-rolesController.get("/", async (ctx) => {
-	const roles = await rolesService.getAllRoles();
+rolesController.get(
+	"/",
+	describeRoute({
+		description: "Получить список всех ролей",
+	}),
+	async (ctx) => {
+		const roles = await rolesService.getAllRoles();
 
-	return ctx.json(roles);
-});
+		return ctx.json(roles);
+	},
+);
 
-rolesController.get("/:roleId", async (ctx) => {
-	const roleId = Number(ctx.req.param("roleId"));
+rolesController.get(
+	"/:roleId",
+	describeRoute({
+		description: "Получить роль по айди",
+	}),
+	async (ctx) => {
+		const roleId = Number(ctx.req.param("roleId"));
 
-	const role = await rolesService.getRole(roleId);
+		const role = await rolesService.getRole(roleId);
 
-	if (!role) {
-		throw new NotFoundError("Роль не найдена");
-	}
+		if (!role) {
+			throw new NotFoundError("Роль не найдена");
+		}
 
-	return ctx.json(role);
-});
+		return ctx.json(role);
+	},
+);
 
 rolesController.post(
 	"/",
 	isAuthorized,
 	isAdmin,
-	zValidator("json", CreateRoleSchema),
+	describeRoute({
+		description: "Создать новую роль",
+	}),
+	zValidator("json", createRoleSchema),
 	async (ctx) => {
 		const isUserAdmin = ctx.get("isAdmin");
 
@@ -53,7 +69,10 @@ rolesController.patch(
 	"/:roleId",
 	isAuthorized,
 	isAdmin,
-	zValidator("json", UpdateRoleSchema),
+	describeRoute({
+		description: "Обновить роль",
+	}),
+	zValidator("json", updateRoleSchema),
 	async (ctx) => {
 		const roleId = Number(ctx.req.param("roleId"));
 
@@ -81,7 +100,10 @@ rolesController.delete(
 	"/:roleId",
 	isAuthorized,
 	isAdmin,
-	zValidator("json", CreateRoleSchema),
+	describeRoute({
+		description: "Удалить роль",
+	}),
+	zValidator("json", createRoleSchema),
 	async (ctx) => {
 		const roleId = Number(ctx.req.param("roleId"));
 

@@ -1,4 +1,4 @@
-import { prisma } from "../src/core/db";
+import { prisma } from "@/src/infra/prisma";
 
 async function seed() {
 	const userRole = await prisma.role.upsert({

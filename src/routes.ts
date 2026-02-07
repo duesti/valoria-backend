@@ -1,9 +1,8 @@
 import { Hono } from "hono";
-
-import { applicationsController } from "./modules/applications/applications.controller";
-import { authController } from "./modules/auth/auth.controller";
-import { rolesController } from "./modules/roles/roles.controller";
-import { usersController } from "./modules/users/users.controller";
+import { applicationsController } from "@/src/modules/applications/applications.controller";
+import { authController } from "@/src/modules/auth/auth.controller";
+import { rolesController } from "@/src/modules/roles/roles.controller";
+import { usersController } from "@/src/modules/users/users.controller";
 
 const router = new Hono();
 router.route("/auth", authController);

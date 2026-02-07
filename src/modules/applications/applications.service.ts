@@ -1,14 +1,21 @@
+import { prisma } from "@/src/infra/prisma";
+
 import type {
-	ApplicationCreateInput,
-	ApplicationUpdateInput,
-} from "../../../generated/prisma/models";
-import { prisma } from "../../core/db";
+	CreateApplicationDTO,
+	UpdateApplicationDTO,
+} from "./applications.dto";
+import {
+	createApplicationSchema,
+	updateApplicationSchema,
+} from "./applications.dto";
 
 export class ApplicationsService {
-	async createApplication(data: ApplicationCreateInput) {
+	async createApplication(data: CreateApplicationDTO) {
+		const validData = createApplicationSchema.parse(data)
+
 		const application = await prisma.application.create({
 			data: {
-				...data,
+				...validData,
 			},
 		});
 
@@ -25,19 +32,19 @@ export class ApplicationsService {
 
 	async updateApplication(
 		applicationId: number,
-		data: ApplicationUpdateInput,
+		data: UpdateApplicationDTO,
 		isAdmin: boolean,
 	) {
-		const updateData = { ...data };
+		const validData = { ...updateApplicationSchema.parse(data) };
 
 		if (!isAdmin) {
-			delete updateData.status;
+			delete validData.status;
 		}
 
 		const application = await prisma.application.update({
 			where: { id: applicationId },
 			data: {
-				...updateData,
+				...validData,
 			},
 		});
 

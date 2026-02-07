@@ -1,10 +1,12 @@
 import { createMiddleware } from "hono/factory";
 import { verify } from "hono/jwt";
+import { config } from "@/src/core/config/config";
+import { prisma } from "@/src/infra/prisma";
 import type { AppEnv } from "..";
-import { config } from "../core/config";
-import { prisma } from "../core/db";
 
-const ACCESS_SECRET = config?.ACCESS_SECRET as string;
+import { NotFoundError } from "../core/errors";
+
+const ACCESS_SECRET = config.jwt.accessSecret as string;
 
 const isAuthorized = createMiddleware<AppEnv>(async (ctx, next) => {
 	const authHeader = ctx.req.header("Authorization");
@@ -16,27 +18,21 @@ const isAuthorized = createMiddleware<AppEnv>(async (ctx, next) => {
 	const token = authHeader.split(" ")[1];
 	if (!token) return;
 
-	try {
-		const payload = await verify(token, ACCESS_SECRET, "HS256");
-		const userId = payload.sub as number;
+	const payload = await verify(token, ACCESS_SECRET, "HS256");
+	const userId = payload.sub as number;
 
-		const user = await prisma.user.findUnique({
-			where: { id: userId },
-		});
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	});
 
-		if (!user) {
-			return ctx.json({ error: "User not found" }, 401);
-		}
-
-		ctx.set("user", user);
-		ctx.set("role_id", user.role_id);
-
-		await next();
-	} catch (e) {
-		if (e instanceof Error) {
-			return ctx.json({ error: e.message }, 401);
-		}
+	if (!user) {
+		throw new NotFoundError("Пользователь не найден");
 	}
+
+	ctx.set("user", user);
+	ctx.set("role_id", user.role_id);
+
+	await next();
 });
 
 export { isAuthorized };
