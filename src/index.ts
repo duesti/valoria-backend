@@ -16,7 +16,12 @@ export type AppEnv = {
 	};
 };
 
-const app = new Hono();
+const app = new Hono({
+	getPath: (req) => {
+    const url = new URL(req.url)
+    return url.pathname
+  }
+});
 
 app.onError(handleErrors);
 app.get(
