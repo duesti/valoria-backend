@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { describeRoute, openAPIRouteHandler } from "hono-openapi";
 import { config } from "@/src/core/config/config";
 import { handleErrors } from "@/src/middlewares/errors.middleware";
+import { logger } from "./core/utils/logger";
 import { router } from "./routes";
 
 export type AppEnv = {
@@ -53,8 +54,12 @@ app.get(
 
 app.get("/docs", swaggerUI({ url: "/openapi" }));
 
-Bun.serve({
+const server = Bun.serve({
 	fetch: app.fetch,
 	hostname: "0.0.0.0",
 	port: config.app.port,
 });
+
+if (server) {
+	logger.success(`Сервер запущен на ${config.app.port} порту.`);
+}

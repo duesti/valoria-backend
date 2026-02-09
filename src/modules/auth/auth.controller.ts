@@ -14,7 +14,6 @@ authController.use(
 		client_id: config.ouath2.clientId,
 		client_secret: config.ouath2.clientSecret,
 		scope: ["identify", "email", "guilds"],
-		redirect_uri: config.ouath2.redirectUri
 	}),
 );
 
